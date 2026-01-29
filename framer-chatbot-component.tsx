@@ -160,7 +160,7 @@ export default function Chatbot() {
 
             const r = await fetch(
 
-                "https://carmah-chatbot-b86mddymr-chawwari-stanfordedus-projects.vercel.app/api/chat",
+                "https://carmah-rag-chat.vercel.app/api/chat",
 
                 {
 

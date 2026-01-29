@@ -7,6 +7,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .vercel/
+.next/
 Screenshot 2025-10-02 at 8.43.47 PM.png
 
 # Keep example env files

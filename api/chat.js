@@ -82,45 +82,46 @@ export default async function handler(req, res) {
     else if (lowerQuery.includes("legal") || lowerQuery.includes("medical") || lowerQuery.includes("financial") || lowerQuery.includes("advice") || lowerQuery.includes("diagnose")) {
       response = "I'm not a professional advisor. Consider reaching out to a qualified expert. If you'd like, I can share how I approach problem-solving in regulated spaces.";
     }
-    else if (intent !== "UNKNOWN") {
-      // Use canned response for known intents
-      response = replyFor(intent);
-      
-      // Avoid repeating the same response twice in a row
-      const lastResponse = history[history.length - 1];
-      if (lastResponse === response) {
-        // Try to get a different response from the same intent category
-        const alternatives = canned[intent];
-        if (alternatives.length > 1) {
-          const filteredAlternatives = alternatives.filter(alt => alt !== response);
-          if (filteredAlternatives.length > 0) {
-            response = filteredAlternatives[Math.floor(Math.random() * filteredAlternatives.length)];
-          }
-        }
-      }
-    }
     else {
-      // For unknown intents, try RAG first
-      try {
-        const ragResult = await retrieveRelevantContext(cleanQuery, {
-          matchCount: 8,
-          similarityThreshold: 0.0
-        });
+      const smallTalkIntents = new Set([
+        "GREET",
+        "NAME",
+        "WHAT_DO_YOU_DO",
+        "FOOD",
+        "FUN_FACT",
+        "HOBBIES"
+      ]);
 
-        if (ragResult?.context) {
-          response = await generateRagResponse({
-            query: cleanQuery,
-            systemPrompt: SYSTEM_PROMPT,
-            context: ragResult.context
+      const shouldUseRag = intent === "UNKNOWN" || !smallTalkIntents.has(intent);
+
+      // For non-smalltalk intents, try RAG first to answer specific questions
+      try {
+        if (shouldUseRag) {
+          const ragResult = await retrieveRelevantContext(cleanQuery, {
+            matchCount: 8,
+            similarityThreshold: 0.0
           });
+
+          if (ragResult?.context) {
+            response = await generateRagResponse({
+              query: cleanQuery,
+              systemPrompt: SYSTEM_PROMPT,
+              context: ragResult.context
+            });
+          }
         }
       } catch (ragError) {
         console.error("RAG retrieval error:", ragError);
       }
 
       if (!response) {
-        // Fallback to personalized handler if RAG fails or no context
-        response = generatePersonalizedResponse(cleanQuery);
+        if (intent !== "UNKNOWN") {
+          // Use canned response for known intents
+          response = replyFor(intent);
+        } else {
+          // Fallback to personalized handler if RAG fails or no context
+          response = generatePersonalizedResponse(cleanQuery);
+        }
       }
 
       // Avoid repeating the same response twice in a row
