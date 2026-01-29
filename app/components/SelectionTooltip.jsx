@@ -63,6 +63,8 @@ export default function SelectionTooltip({ onAsk }) {
         borderColor: tokens.colors.dividers,
         borderRadius: tokens.radius.pill,
         padding: `${tokens.spacing["4"]} ${tokens.spacing["8"]}`,
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
         ...typography.metadata,
         color: tokens.colors.meta,
         cursor: "pointer",

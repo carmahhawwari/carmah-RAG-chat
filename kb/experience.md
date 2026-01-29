@@ -1,9 +1,9 @@
 # Professional Experience
 
 ## Apple - Product Design Intern, Apple Maps (June 2025 - September 2025)
-- Spearheaded the redesign of Apple Maps on the Web for desktop and mobile, collaborating with engineers and business partners on project scoping, aligning the product with the broader Maps ecosystem
-- Partnered with product team to design partner-facing screens that showcase third party presence on Apple Maps
-- Supported early stage design exploration, market analysis, and product development for undisclosed project
+- Focused on redesigning Apple Maps on the Web for desktop and mobile, collaborating with engineers and business partners to align with the broader Maps ecosystem
+- Designed partner-facing screens to showcase third-party presence on Apple Maps
+- Supported early-stage design exploration, market analysis, and product development for an undisclosed project while adapting the Liquid Glass design system for web contexts
 
 ## PwC - Enterprise Project Management Consulting Intern (July - September 2024)
 - Built performance tracking dashboard in Excel for 40+ national initiatives, enabling quarterly KPI, budget and milestone analysis in both English and Arabic

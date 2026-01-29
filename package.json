@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
+    "dotenv": "*",
     "lottie-react": "^2.4.1",
     "next": "*",
     "openai": "^5.20.2",

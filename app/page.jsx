@@ -54,6 +54,7 @@ const projects = [
       type: "video",
       src: "/assets/CalEXPLORE.mp4",
       gradient: "transparent",
+      scale: 0.8,
     },
   },
   {
@@ -81,6 +82,7 @@ export default function HomePage() {
   const [appleMapsAnimation, setAppleMapsAnimation] = React.useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
   const [preFillText, setPreFillText] = React.useState("");
+  const cursorRef = React.useRef(null);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -99,12 +101,47 @@ export default function HomePage() {
     };
   }, []);
 
+  React.useEffect(() => {
+    const cursorEl = cursorRef.current;
+    if (!cursorEl) return;
+
+    const handleMouseMove = (event) => {
+      cursorEl.style.transform = `translate(${event.clientX}px, ${event.clientY}px)`;
+    };
+
+    const handleMouseOver = (event) => {
+      if (event.target.closest(".brick-media")) {
+        document.body.classList.add("cursor-hover");
+      }
+    };
+
+    const handleMouseOut = (event) => {
+      if (event.target.closest(".brick-media")) {
+        document.body.classList.remove("cursor-hover");
+      }
+    };
+
+    document.body.addEventListener("mousemove", handleMouseMove);
+    document.body.addEventListener("mouseover", handleMouseOver);
+    document.body.addEventListener("mouseout", handleMouseOut);
+    document.body.style.cursor = "none";
+
+    return () => {
+      document.body.removeEventListener("mousemove", handleMouseMove);
+      document.body.removeEventListener("mouseover", handleMouseOver);
+      document.body.removeEventListener("mouseout", handleMouseOut);
+      document.body.classList.remove("cursor-hover");
+      document.body.style.cursor = "";
+    };
+  }, []);
+
+
   const handleOpenDrawer = () => {
     setIsDrawerOpen(true);
   };
 
   const handleAskAboutSelection = (text) => {
-    setPreFillText(`Tell me more about: ${text}`);
+    setPreFillText(text);
     setIsDrawerOpen(true);
   };
 
@@ -114,35 +151,32 @@ export default function HomePage() {
         padding: tokens.spacing["80"],
         width: "100%",
         boxSizing: "border-box",
+        paddingRight: isDrawerOpen ? `calc(${tokens.spacing["80"]} + 320px)` : tokens.spacing["80"],
+        transition: "padding-right 0.3s ease",
       }}
     >
-      <header
+      <button
+        type="button"
+        aria-label="Toggle chatbot drawer"
+        onClick={handleOpenDrawer}
         style={{
-          maxWidth: "1000px",
-          margin: "0 auto",
-          display: "flex",
-          justifyContent: "flex-end",
-          marginBottom: tokens.spacing["24"],
+          position: "fixed",
+          top: tokens.spacing["80"],
+          left: "auto",
+          right: "60px",
+          background: "transparent",
+          border: "0.5px solid",
+          borderColor: tokens.colors.dividers,
+          borderRadius: tokens.radius.xs,
+          padding: `${tokens.spacing["8"]} ${tokens.spacing["12"]}`,
+          cursor: "pointer",
+          ...typography.metadata,
+          color: tokens.colors.meta,
+          zIndex: 40,
         }}
       >
-        <button
-          type="button"
-          aria-label="Toggle chatbot drawer"
-          onClick={handleOpenDrawer}
-          style={{
-            background: "transparent",
-            border: "0.5px solid",
-            borderColor: tokens.colors.dividers,
-            borderRadius: tokens.radius.pill,
-            padding: `${tokens.spacing["8"]} ${tokens.spacing["12"]}`,
-            cursor: "pointer",
-            ...typography.metadata,
-            color: tokens.colors.meta,
-          }}
-        >
-          Chat
-        </button>
-      </header>
+        Chat
+      </button>
       <div
         style={{
           maxWidth: "1000px",
@@ -298,14 +332,13 @@ export default function HomePage() {
               width: "100%",
               display: "flex",
               gap: "28px",
-              justifyContent: "center",
             }}
           >
             {[0, 1].map((columnIndex) => (
               <div
                 key={`column-${columnIndex}`}
                 style={{
-                  width: "450px",
+                  width: "486px",
                   display: "flex",
                   flexDirection: "column",
                   gap: tokens.spacing["24"],
@@ -316,8 +349,9 @@ export default function HomePage() {
                   .map((project, index) => (
                     <div key={`${project.title}-${columnIndex}-${index}`}>
                       <div
+                        className="brick-media"
                         style={{
-                          width: "450px",
+                          width: "486px",
                           height: project.height,
                           border: "0.5px solid",
                           borderColor: tokens.colors.dividers,
@@ -325,7 +359,6 @@ export default function HomePage() {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          overflow: "hidden",
                         }}
                       >
                         {project.media?.type === "video" ? (
@@ -337,6 +370,8 @@ export default function HomePage() {
                               objectFit: project.media?.fit || "contain",
                               backgroundColor: "transparent",
                               display: "block",
+                              transform: `scale(${project.media?.scale || 1})`,
+                              transformOrigin: "center",
                             }}
                             autoPlay
                             muted
@@ -395,6 +430,7 @@ export default function HomePage() {
           </div>
         </section>
       </div>
+      <div ref={cursorRef} className="custom-cursor blur-surface" />
       <SelectionTooltip onAsk={handleAskAboutSelection} />
       <ChatDrawer
         isOpen={isDrawerOpen}

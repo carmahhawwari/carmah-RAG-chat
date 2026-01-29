@@ -36,13 +36,11 @@ export default function ChatDrawer({
   ]);
   const [inputValue, setInputValue] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
+  const [pendingSuggestion, setPendingSuggestion] = React.useState("");
 
   React.useEffect(() => {
     if (preFillText) {
-      setInputValue(preFillText);
-      if (onPrefillConsumed) {
-        onPrefillConsumed();
-      }
+      setPendingSuggestion(preFillText);
     }
   }, [preFillText, onPrefillConsumed]);
 
@@ -90,6 +88,13 @@ export default function ChatDrawer({
     sendMessage(text);
   };
 
+  const handleDismissSuggestion = () => {
+    setPendingSuggestion("");
+    if (onPrefillConsumed) {
+      onPrefillConsumed();
+    }
+  };
+
   return (
     <aside
       style={{
@@ -125,7 +130,7 @@ export default function ChatDrawer({
             color: tokens.colors.meta,
           }}
         >
-          CARMH
+          CARMAHGPT
         </div>
         <button
           type="button"
@@ -148,11 +153,63 @@ export default function ChatDrawer({
       <form
         onSubmit={handleSubmit}
         style={{
+          position: "relative",
           padding: tokens.spacing["16"],
           borderTop: "0.5px solid",
           borderTopColor: tokens.colors.dividers,
         }}
       >
+        {pendingSuggestion ? (
+          <div
+            style={{
+              position: "absolute",
+              left: tokens.spacing["8"],
+              right: tokens.spacing["8"],
+              bottom: `calc(100% + ${tokens.spacing["8"]})`,
+              background: "#E6E6E6",
+              borderRadius: tokens.radius.sm,
+              padding: tokens.spacing["8"],
+              display: "flex",
+              alignItems: "center",
+              gap: tokens.spacing["8"],
+              zIndex: 2,
+            }}
+          >
+            <div
+              style={{
+                ...typography.metadata,
+                color: tokens.colors.meta,
+                flex: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {pendingSuggestion}
+            </div>
+            <button
+              type="button"
+              onClick={handleDismissSuggestion}
+              aria-label="Dismiss suggestion"
+              style={{
+                border: "0.5px solid",
+                borderColor: tokens.colors.dividers,
+                borderRadius: tokens.radius.xs,
+                background: "transparent",
+                width: "24px",
+                height: "24px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                ...typography.metadata,
+                color: tokens.colors.meta,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        ) : null}
         <div
           style={{
             display: "flex",

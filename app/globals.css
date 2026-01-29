@@ -10,3 +10,74 @@ body {
   color: #23201F;
   overflow-x: hidden;
 }
+
+::selection {
+  background: #E6E6E6;
+}
+
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s ease, height 0.2s ease, background 0.2s ease;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform;
+}
+
+.custom-cursor::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(150, 143, 140, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+body.cursor-hover .custom-cursor {
+  width: 23px;
+  height: 23px;
+}
+
+.blur-surface {
+  background: rgba(150, 143, 140, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.brick-media {
+  position: relative;
+  overflow: hidden;
+}
+
+.brick-media > * {
+  position: relative;
+  z-index: 1;
+}
+
+.brick-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: radial-gradient(
+    circle at center,
+    rgba(138, 143, 148, 0) 0%,
+    rgba(138, 143, 148, 0) 70%,
+    rgba(138, 143, 148, 0.08) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.brick-media:hover::after {
+  opacity: 1;
+}
+
