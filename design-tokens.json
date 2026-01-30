@@ -11,9 +11,10 @@
     "secondary": "#6B6461",
     "meta": "#6B6461",
     "tertiary": "#8A8F94",
+
     "caltrainRed": "#871717",
-    "dividers": "rgba(47, 43, 42, 0.2)",
-    "background": "#FCFCFC"
+    "dividers": "rgba(47, 43, 42, 0.1)",
+    "background": "#FAFAFA"
   },
   "spacing": {
     "0": "0px",

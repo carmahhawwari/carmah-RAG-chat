@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Lottie from "lottie-react";
+import Link from "next/link";
 import ChatDrawer from "./components/ChatDrawer";
 import SelectionTooltip from "./components/SelectionTooltip";
 import tokens from "../design-tokens.json";
@@ -22,6 +23,8 @@ const typography = Object.fromEntries(
     },
   ])
 );
+
+const nameLetters = ["C", "a", "r", "m", "a", "h"];
 
 const experience = [
   { year: "2025", role: "Stanford University", detail: "Design + AI" },
@@ -50,6 +53,7 @@ const projects = [
     body:
       "Enabling short form discovery in CalTrain app through swipe-based discovery feature.",
     height: "580px",
+    href: "/calexplore",
     media: {
       type: "video",
       src: "/assets/CalEXPLORE.mp4",
@@ -83,6 +87,12 @@ export default function HomePage() {
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
   const [preFillText, setPreFillText] = React.useState("");
   const cursorRef = React.useRef(null);
+  const nameContainerRef = React.useRef(null);
+  const letterRefs = React.useRef([]);
+  const resetTimeoutsRef = React.useRef({});
+  const [basePositions, setBasePositions] = React.useState([]);
+  const [letterPositions, setLetterPositions] = React.useState([]);
+  const [nameSize, setNameSize] = React.useState(null);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -135,14 +145,89 @@ export default function HomePage() {
     };
   }, []);
 
+  React.useEffect(() => {
+    const handleOpen = () => setIsDrawerOpen(true);
+    window.addEventListener("open-chat-drawer", handleOpen);
+    return () => {
+      window.removeEventListener("open-chat-drawer", handleOpen);
+    };
+  }, []);
 
-  const handleOpenDrawer = () => {
-    setIsDrawerOpen(true);
-  };
+  React.useLayoutEffect(() => {
+    if (!nameContainerRef.current) return;
+    if (basePositions.length === nameLetters.length) return;
+    const containerRect = nameContainerRef.current.getBoundingClientRect();
+    const nodes = letterRefs.current;
+    if (nodes.length !== nameLetters.length || nodes.some((node) => !node)) return;
+    const positions = nodes.map((node) => {
+      const rect = node.getBoundingClientRect();
+      return {
+        x: rect.left - containerRect.left,
+        y: rect.top - containerRect.top,
+      };
+    });
+    setBasePositions(positions);
+    setLetterPositions(positions);
+    setNameSize({
+      width: containerRect.width,
+      height: containerRect.height,
+    });
+  }, [basePositions.length]);
+
+  React.useEffect(() => {
+    return () => {
+      Object.values(resetTimeoutsRef.current).forEach((timerId) => {
+        clearTimeout(timerId);
+      });
+    };
+  }, []);
+
 
   const handleAskAboutSelection = (text) => {
     setPreFillText(text);
     setIsDrawerOpen(true);
+  };
+
+  const handleLetterPointerDown = (index) => (event) => {
+    event.preventDefault();
+    const currentPosition = letterPositions[index] || basePositions[index];
+    if (!currentPosition) return;
+    if (resetTimeoutsRef.current[index]) {
+      clearTimeout(resetTimeoutsRef.current[index]);
+      resetTimeoutsRef.current[index] = null;
+    }
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const originX = currentPosition.x;
+    const originY = currentPosition.y;
+
+    const handleMove = (moveEvent) => {
+      const dx = moveEvent.clientX - startX;
+      const dy = moveEvent.clientY - startY;
+      setLetterPositions((prev) => {
+        const next = [...prev];
+        next[index] = { x: originX + dx, y: originY + dy };
+        return next;
+      });
+    };
+
+    const handleUp = () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+      resetTimeoutsRef.current[index] = window.setTimeout(() => {
+        setLetterPositions((prev) => {
+          const next = [...prev];
+          if (basePositions[index]) {
+            next[index] = basePositions[index];
+          }
+          return next;
+        });
+        resetTimeoutsRef.current[index] = null;
+      }, 120000);
+    };
+
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
   };
 
   return (
@@ -155,28 +240,6 @@ export default function HomePage() {
         transition: "padding-right 0.3s ease",
       }}
     >
-      <button
-        type="button"
-        aria-label="Toggle chatbot drawer"
-        onClick={handleOpenDrawer}
-        style={{
-          position: "fixed",
-          top: tokens.spacing["80"],
-          left: "auto",
-          right: "60px",
-          background: "transparent",
-          border: "0.5px solid",
-          borderColor: tokens.colors.dividers,
-          borderRadius: tokens.radius.xs,
-          padding: `${tokens.spacing["8"]} ${tokens.spacing["12"]}`,
-          cursor: "pointer",
-          ...typography.metadata,
-          color: tokens.colors.meta,
-          zIndex: 40,
-        }}
-      >
-        Chat
-      </button>
       <div
         style={{
           maxWidth: "1000px",
@@ -209,7 +272,39 @@ export default function HomePage() {
                 margin: 0,
               }}
             >
-              Carmah
+              <span
+                ref={nameContainerRef}
+                style={{
+                  display: "inline-block",
+                  position: "relative",
+                  width: nameSize ? `${nameSize.width}px` : "auto",
+                  height: nameSize ? `${nameSize.height}px` : "auto",
+                }}
+              >
+                {nameLetters.map((letter, index) => {
+                  const isReady = basePositions.length === nameLetters.length;
+                  const position = letterPositions[index];
+                  return (
+                    <span
+                      key={`${letter}-${index}`}
+                      ref={(node) => {
+                        letterRefs.current[index] = node;
+                      }}
+                      onPointerDown={handleLetterPointerDown(index)}
+                      style={{
+                        position: isReady ? "absolute" : "relative",
+                        left: isReady && position ? `${position.x}px` : "auto",
+                        top: isReady && position ? `${position.y}px` : "auto",
+                        cursor: "grab",
+                        userSelect: "none",
+                        touchAction: "none",
+                      }}
+                    >
+                      {letter}
+                    </span>
+                  );
+                })}
+              </span>
             </h1>
 
             <div
@@ -348,46 +443,91 @@ export default function HomePage() {
                   .filter((_, index) => index % 2 === columnIndex)
                   .map((project, index) => (
                     <div key={`${project.title}-${columnIndex}-${index}`}>
-                      <div
-                        className="brick-media"
-                        style={{
-                          width: "486px",
-                          height: project.height,
-                          border: "0.5px solid",
-                          borderColor: tokens.colors.dividers,
-                          background: project.media?.gradient || "transparent",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        {project.media?.type === "video" ? (
-                          <video
-                            src={project.media.src}
+                      {project.href ? (
+                        <Link href={project.href} style={{ textDecoration: "none" }}>
+                          <div
+                            className="brick-media"
                             style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: project.media?.fit || "contain",
-                              backgroundColor: "transparent",
-                              display: "block",
-                              transform: `scale(${project.media?.scale || 1})`,
-                              transformOrigin: "center",
+                              width: "486px",
+                              height: project.height,
+                              border: "0.5px solid",
+                              borderColor: tokens.colors.dividers,
+                              background: project.media?.gradient || "transparent",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                          />
-                        ) : null}
-                        {project.media?.type === "lottie" && appleMapsAnimation ? (
-                          <Lottie
-                            animationData={appleMapsAnimation}
-                            loop
-                            autoplay
-                            style={{ width: "100%", height: "100%" }}
-                          />
-                        ) : null}
-                      </div>
+                          >
+                            {project.media?.type === "video" ? (
+                              <video
+                                src={project.media.src}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: project.media?.fit || "contain",
+                                  backgroundColor: "transparent",
+                                  display: "block",
+                                  transform: `scale(${project.media?.scale || 1})`,
+                                  transformOrigin: "center",
+                                }}
+                                autoPlay
+                                muted
+                                loop
+                                playsInline
+                              />
+                            ) : null}
+                            {project.media?.type === "lottie" && appleMapsAnimation ? (
+                              <Lottie
+                                animationData={appleMapsAnimation}
+                                loop
+                                autoplay
+                                style={{ width: "100%", height: "100%" }}
+                              />
+                            ) : null}
+                          </div>
+                        </Link>
+                      ) : (
+                        <div
+                          className="brick-media"
+                          style={{
+                            width: "486px",
+                            height: project.height,
+                            border: "0.5px solid",
+                            borderColor: tokens.colors.dividers,
+                            background: project.media?.gradient || "transparent",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {project.media?.type === "video" ? (
+                            <video
+                              src={project.media.src}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: project.media?.fit || "contain",
+                                backgroundColor: "transparent",
+                                display: "block",
+                                transform: `scale(${project.media?.scale || 1})`,
+                                transformOrigin: "center",
+                              }}
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                            />
+                          ) : null}
+                          {project.media?.type === "lottie" && appleMapsAnimation ? (
+                            <Lottie
+                              animationData={appleMapsAnimation}
+                              loop
+                              autoplay
+                              style={{ width: "100%", height: "100%" }}
+                            />
+                          ) : null}
+                        </div>
+                      )}
                       <div style={{ height: tokens.spacing["16"] }} />
                       <div
                         style={{
